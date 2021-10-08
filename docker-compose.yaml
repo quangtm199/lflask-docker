@@ -1,6 +1,6 @@
 version: "3.3"
 services:
   flask-app:
-    image: quangtm/detect-deploy:latest
+    image: quangtm/flask-docker:latest
     ports:
       - "5000:5000"

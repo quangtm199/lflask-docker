@@ -34,12 +34,23 @@ pipeline {
             sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
             sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
             sh "docker push ${DOCKER_IMAGE}:latest"
-        }
+            sh "docker pull ${DOCKER_IMAGE}:latest"
+            sh "docker run -it -p 5000:5000 ${DOCKER_IMAGE}:latest"
 
+        }
+      
         //clean to save disk
         sh "docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG}"
         // sh "docker image rm ${DOCKER_IMAGE}:latest"
       }
+    }
+    stage('deploy'){
+      steps{
+        sshagent(['ssh-remote']) {
+
+            sh 'ssh -o StrictHostKeyChecking=no -l root 172.0.0.1 touch test.txt'
+    // some block
+    }}
     }
   }
 
