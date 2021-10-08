@@ -21,36 +21,37 @@ pipeline {
       }
     }
 
-   stage("Deploy") {
+    stage("build") {
       agent { node {label 'master'}}
       environment {
         DOCKER_TAG="${GIT_BRANCH.tokenize('/').pop()}-${GIT_COMMIT.substring(0,7)}"
       }
       steps {
-        // sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . "
-        // sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
+        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} . "
+        sh "docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest"
         sh "docker image ls | grep ${DOCKER_IMAGE}"
-            // docker run -it --gpus all -p 8001:8001 detect:v1 
         withCredentials([usernamePassword(credentialsId: 'docker-hub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-            // sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
-            // sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
-            // sh "docker push ${DOCKER_IMAGE}:latest"
+            sh 'echo $DOCKER_PASSWORD | docker login --username $DOCKER_USERNAME --password-stdin'
+            sh "docker push ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            sh "docker push ${DOCKER_IMAGE}:latest"
             sh "docker pull ${DOCKER_IMAGE}:latest"
-            // sh "docker run -it --gpus all -p 8001:8001 ${DOCKER_IMAGE}:latest"
+            sh "docker run -it -p 5000:5000 ${DOCKER_IMAGE}:latest"
 
         }
-
+      
         //clean to save disk
-        // sh "docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG}"
+        sh "docker image rm ${DOCKER_IMAGE}:${DOCKER_TAG}"
         // sh "docker image rm ${DOCKER_IMAGE}:latest"
       }
+    }
+    stage('deploy'){
+      steps{
+        sshagent(['ssh-remote']) {
 
+            sh 'ssh -o StrictHostKeyChecking=no -l root 172.0.0.1 touch test.txt'
+    // some block
+    }}
     }
-    stage("deployment"){
-      agent { node {label 'master'}}
-      sh "./deploy.sh"
-    }
-  
   }
 
   post {
